@@ -18,12 +18,12 @@ assert len(files) == len(files2)
 def f(fn):
     fn2 = fn[:-3]+'labels.ply'
     a=plyfile.PlyData().read(fn)
-    v=np.array([list(x) for x in a.elements[0]])
+    v=np.array([list(x) for x in a.elements[0]])    #elements[0] stores all vertices with [x,y,z,r,g,b,alpha]
     coords=np.ascontiguousarray(v[:,:3]-v[:,:3].mean(0))
     colors=np.ascontiguousarray(v[:,3:6])/127.5-1
     a=plyfile.PlyData().read(fn2)
     w=remapper[np.array(a.elements[0]['label'])]
-    torch.save((coords,colors,w),fn[:-4]+'.pth')
+    torch.save((coords,colors,w),fn[:-4]+'.pth')    #saves for each vertex the coordinates, color and label
     print(fn, fn2)
 
 p = mp.Pool(processes=mp.cpu_count())

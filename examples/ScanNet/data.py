@@ -5,9 +5,9 @@
 # LICENSE file in the root directory of this source tree.
 
 # Options
-scale=20  #Voxel size = 1/scale
-val_reps=1 # Number of test views, 1 or more
-batch_size=32
+scale=20 #50  #Voxel size = 1/scale
+val_reps=1 #3 # Number of test views, 1 or more
+batch_size=8 #5
 
 import torch, numpy as np, glob, math, torch.utils.data, scipy.ndimage, multiprocessing as mp
 
@@ -15,15 +15,17 @@ dimension=3
 full_scale=4096 #Input field size
 
 # VALID_CLAS_IDS have been mapped to the range {0,1,...,19}
-VALID_CLASS_IDS = np.array([1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 14, 16, 24, 28, 33, 34, 36, 39])
+#VALID_CLASS_IDS = np.array([1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 14, 16, 24, 28, 33, 34, 36, 39])
 
+pth_dir = '/usr/mount/v4rtemp/el/SparseConvNet/'
+#pth_dir=''
 train,val=[],[]
 for x in torch.utils.data.DataLoader(
-      glob.glob('train/*.pth'),
+      glob.glob(pth_dir + 'train_20classes/*.pth'),
         collate_fn=lambda x: torch.load(x[0]), num_workers=mp.cpu_count()):
     train.append(x)
 for x in torch.utils.data.DataLoader(
-      glob.glob('val/*.pth'),
+      sorted(glob.glob(pth_dir + 'val_20classes/*.pth')),
         collate_fn=lambda x: torch.load(x[0]), num_workers=mp.cpu_count()):
     val.append(x)
 print('Training examples:', len(train))
@@ -80,7 +82,7 @@ def trainMerge(tbl):
     labels=torch.cat(labels,0)
     return {'x': [locs,feats], 'y': labels.long(), 'id': tbl}
 train_data_loader = torch.utils.data.DataLoader(
-    list(range(len(train))),batch_size=batch_size, collate_fn=trainMerge, num_workers=20, shuffle=True)
+    list(range(len(train))),batch_size=batch_size, collate_fn=trainMerge, num_workers=5, shuffle=True)
 
 
 valOffsets=[0]
@@ -117,10 +119,10 @@ def valMerge(tbl):
         feats.append(torch.from_numpy(b))
         labels.append(torch.from_numpy(c))
         point_ids.append(torch.from_numpy(np.nonzero(idxs)[0]+valOffsets[i]))
-    locs=torch.cat(locs,0)
+    locs=torch.cat(locs,0)  #converts a list of tensors to a single tensor
     feats=torch.cat(feats,0)
     labels=torch.cat(labels,0)
     point_ids=torch.cat(point_ids,0)
     return {'x': [locs,feats], 'y': labels.long(), 'id': tbl, 'point_ids': point_ids}
 val_data_loader = torch.utils.data.DataLoader(
-    list(range(len(val))),batch_size=batch_size, collate_fn=valMerge, num_workers=20,shuffle=True)
+    list(range(len(val))),batch_size=batch_size, collate_fn=valMerge, num_workers=5,shuffle=True)
