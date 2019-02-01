@@ -8,6 +8,7 @@
 scale=20 #50  #Voxel size = 1/scale
 val_reps=1 #3 # Number of test views, 1 or more
 batch_size=8 #5
+load_num_workers = 2
 
 import torch, numpy as np, glob, math, torch.utils.data, scipy.ndimage, multiprocessing as mp
 
@@ -19,21 +20,11 @@ full_scale=4096 #Input field size
 pth_dir = '/usr/mount/v4rtemp/el/SparseConvNet/'
 #pth_dir=''
 train,val=[],[]
-for x in torch.utils.data.DataLoader(
-      glob.glob(pth_dir + 'train_20classes/*.pth'),
-        collate_fn=lambda x: torch.load(x[0]), num_workers=mp.cpu_count()):
-    train.append(x)
-for x in torch.utils.data.DataLoader(
-      sorted(glob.glob(pth_dir + 'val_20classes/*.pth')),
-        collate_fn=lambda x: torch.load(x[0]), num_workers=mp.cpu_count()):
-    val.append(x)
-print('Training examples:', len(train))
-print('Validation examples:', len(val))
 
-#Elastic distortion
-blur0=np.ones((3,1,1)).astype('float32')/3
-blur1=np.ones((1,3,1)).astype('float32')/3
-blur2=np.ones((1,1,3)).astype('float32')/3
+# Elastic distortion
+blur0 = np.ones((3, 1, 1)).astype('float32') / 3
+blur1 = np.ones((1, 3, 1)).astype('float32') / 3
+blur2 = np.ones((1, 1, 3)).astype('float32') / 3
 def elastic(x,gran,mag):
     bb=np.abs(x).max(0).astype(np.int32)//gran+3
     noise=[np.random.randn(bb[0],bb[1],bb[2]).astype('float32') for _ in range(3)]
@@ -80,16 +71,7 @@ def trainMerge(tbl):
     feats=torch.cat(feats,0)
     labels=torch.cat(labels,0)
     return {'x': [locs,feats], 'y': labels.long(), 'id': tbl}
-train_data_loader = torch.utils.data.DataLoader(
-    list(range(len(train))),batch_size=batch_size, collate_fn=trainMerge, num_workers=5, shuffle=True)
 
-
-valOffsets=[0]
-valLabels=[]
-for idx,x in enumerate(val):
-    valOffsets.append(valOffsets[-1]+x[2].size) #x[2] are the labels
-    valLabels.append(x[2].astype(np.int32))
-valLabels=np.hstack(valLabels)
 
 def valMerge(tbl):  #tbl is a list of length batch_size containing indices in the range (0, len(dataset))
     locs=[]
@@ -123,7 +105,38 @@ def valMerge(tbl):  #tbl is a list of length batch_size containing indices in th
     labels=torch.cat(labels,0)
     point_ids=torch.cat(point_ids,0)
     return {'x': [locs,feats], 'y': labels.long(), 'id': tbl, 'point_ids': point_ids}
-val_data_loader = torch.utils.data.DataLoader(
-    list(range(len(val))),batch_size=batch_size, collate_fn=valMerge, num_workers=5,shuffle=True)
 
 
+def load_train_data(path):
+    for x in torch.utils.data.DataLoader(
+            glob.glob(path + '*.pth'),
+            collate_fn=lambda x: torch.load(x[0]), num_workers=mp.cpu_count()):
+        train.append(x)
+    print('Training examples:', len(train))
+
+    train_data_loader = torch.utils.data.DataLoader(
+        list(range(len(train))), batch_size=batch_size, collate_fn=trainMerge, num_workers=load_num_workers, shuffle=True)
+
+    return train_data_loader
+
+
+valOffsets = [0]
+valLabels = []
+def load_val_data(path):
+    for x in torch.utils.data.DataLoader(
+            sorted(glob.glob(path + '*.pth')),
+            collate_fn=lambda x: torch.load(x[0]), num_workers=mp.cpu_count()):
+        val.append(x)
+
+    print('Validation examples:', len(val))
+
+    global valLabels
+    for idx, x in enumerate(val):
+        valOffsets.append(valOffsets[-1] + x[2].size)  # x[2] are the labels
+        valLabels.append(x[2].astype(np.int32))
+    valLabels = np.hstack(valLabels)
+
+    val_data_loader = torch.utils.data.DataLoader(
+        list(range(len(val))), batch_size=batch_size, collate_fn=valMerge, num_workers=load_num_workers, shuffle=True)
+
+    return val_data_loader
