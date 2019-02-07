@@ -45,7 +45,7 @@ def create_color_palette_gt():
        (100, 85, 144)       # otherprop
     ]
 
-#color pallete for nyu40 labels (corresponding to the legend provided by ScanNet
+#color pallete for nyu40 labels (corresponding to the legend image provided by ScanNet)
 def create_color_palette_legend():
    return [
       (0, 0, 0),

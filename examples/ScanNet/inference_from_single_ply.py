@@ -13,7 +13,7 @@ import numpy as np
 def visualize(ids, mesh_file, output_file):
     if not output_file.endswith('.ply'):
         sys.stderr.write('ERROR: ' + 'output file must be a .ply file' + '\n')
-    colors = NYU40_colors.create_color_palette_legend()
+    colors = NYU40_colors.create_color_palette_gt()
     num_colors = len(colors)
     with open(mesh_file, 'rb') as f:
         plydata = PlyData.read(f)
@@ -32,7 +32,7 @@ def visualize(ids, mesh_file, output_file):
 
 
 
-ply_file ='/home/edith/Software/SparseConvNet/examples/ScanNet/test/GH25_office_ElasticFusion.ply'
+ply_file ='/home/edith/Software/SparseConvNet/examples/ScanNet/test/GH25_office_ElasticFusion_rotated.ply'
 exp_name='unet_scale20_m16_rep1_notResidualBlocks_40classes/unet_scale20_m16_rep1_notResidualBlocks'
 num_classes = 40
 scale = 20
@@ -100,7 +100,7 @@ with torch.no_grad():
 
 labels = store.max(1)[1].numpy()
 
-pth_save = ply_file[:-4] + '_pred.ply'
+pth_save = ply_file[:-4] + '_pred_gt.ply'
 visualize(labels, ply_file, pth_save)
 
 

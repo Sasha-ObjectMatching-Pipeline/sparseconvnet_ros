@@ -23,8 +23,9 @@ use_cuda = torch.cuda.is_available()
 dir = '/usr/mount/v4rtemp/el/SparseConvNet/'
 #dir=''
 #exp_name='unet_scale50_m32_rep2_ResidualBlocks'
-exp_name='unet_scale20_m16_rep1_NoResidualBlocks_20classes'
-num_classes = 20
+num_classes = 40
+exp_name='unet_scale20_m16_rep1_NoResidualBlocks_' + str(num_classes) +'classes_test'
+
 
 class Model(nn.Module):
     def __init__(self):
@@ -47,8 +48,8 @@ if __name__ == "__main__":
     if use_cuda:
         unet=unet.cuda()
 
-    train_data_loader = data_modular.load_train_data(dir + 'train_20classes/')
-    val_data_loader = data_modular.load_val_data(dir + 'val_20classes/')
+    train_data_loader = data_modular.load_train_data(dir + 'train_' + str(num_classes) +'classes/')
+    val_data_loader = data_modular.load_val_data(dir + 'val_' + str(num_classes) + 'classes/')
 
     training_epochs=512
     training_epoch=scn.checkpoint_restore(unet,dir+exp_name,'unet',use_cuda)

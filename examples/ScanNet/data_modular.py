@@ -8,7 +8,7 @@
 scale=20 #50  #Voxel size = 1/scale
 val_reps=1 #3 # Number of test views, 1 or more
 batch_size=8 #5
-load_num_workers = 2
+load_num_workers = 20
 
 import torch, numpy as np, glob, math, torch.utils.data, scipy.ndimage, multiprocessing as mp
 
