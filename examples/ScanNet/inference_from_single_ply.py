@@ -7,13 +7,25 @@ from plyfile import PlyData
 import math
 import numpy as np
 
+num_classes = 40
+
 # VALID_CLAS_IDS have been mapped to the range {0,1,...,19}
+remapper=np.ones(150)*(-100)
+print("Semantic segmentation with {0} classes".format(num_classes))
+if num_classes is 20:
+    # VALID_CLAS_IDS have been mapped to the range {0,1,...,19}
+    for i,x in enumerate([1,2,3,4,5,6,7,8,9,10,11,12,14,16,24,28,33,34,36,39]):
+        remapper[x]=i
+if num_classes is 21:
+    # VALID_CLAS_IDS have been mapped to the range {0,1,...,19}
+    for i,x in enumerate([1,2,3,4,5,6,7,8,9,10,11,12,14,16,24,28,33,34,36,39,40]):
+        remapper[x]=i
 
 
 def visualize(ids, mesh_file, output_file):
     if not output_file.endswith('.ply'):
         sys.stderr.write('ERROR: ' + 'output file must be a .ply file' + '\n')
-    colors = NYU40_colors.create_color_palette_gt()
+    colors = NYU40_colors.create_color_palette_legend()
     num_colors = len(colors)
     with open(mesh_file, 'rb') as f:
         plydata = PlyData.read(f)
@@ -32,9 +44,9 @@ def visualize(ids, mesh_file, output_file):
 
 
 
-ply_file ='/home/edith/Software/SparseConvNet/examples/ScanNet/test/GH25_office_ElasticFusion_rotated.ply'
-exp_name='unet_scale20_m16_rep1_notResidualBlocks_40classes/unet_scale20_m16_rep1_notResidualBlocks'
-num_classes = 40
+#ply_file ='/home/edith/Software/SparseConvNet/examples/ScanNet/test/GH25_office_ElasticFusion_rotated.ply'
+ply_file='/home/edith/Downloads/ETH_change_detection_ds/icra_2017_change_detection/living_room/complete_mesh/observation_0_aligned.ply'
+exp_name='unet_scale20_m16_rep1_noResidualBlocks_' + str(num_classes) +'classes/unet_scale20_m16_rep1_noResidualBlocks'
 scale = 20
 full_scale=4096
 val_reps=1
@@ -47,8 +59,6 @@ colors=np.ascontiguousarray(v[:,3:6])/127.5-1
 fake_labels = np.zeros(len(coords))
 #torch.save((coords,colors,w),fn[:-4]+'.pth')    #saves for each vertex the coordinates, color and label
 
-valOffsets = [0]
-valOffsets.append(valOffsets[-1] + coords.size)  # list (0, coords.size)
 
 locs=[]
 a = coords
@@ -85,13 +95,15 @@ if use_cuda:
     unet=unet.cuda()
 
 training_epoch=scn.checkpoint_restore(unet,exp_name,'unet',use_cuda)
+if training_epoch is 1:
+    print("Training epoch is 1. The model probably couldn't be loaded.")
 print('#classifer parameters', sum([x.nelement() for x in unet.parameters()]))
 
 with torch.no_grad():
     unet.eval()
     scn.forward_pass_multiplyAdd_count = 0
     scn.forward_pass_hidden_states = 0
-    store=torch.zeros(len(labels), num_classes)   #valOffsets is the number of all verteces of all scenes
+    store=torch.zeros(len(labels), num_classes)
     for rep in range(1, 1 + val_reps):
         if use_cuda:
             batch['x'][1] = batch['x'][1].cuda()
@@ -99,8 +111,11 @@ with torch.no_grad():
         store.index_add_(0, batch['point_ids'], predictions.cpu())
 
 labels = store.max(1)[1].numpy()
+if num_classes != 40:
+    for i, l in enumerate(labels):
+        labels[i] = np.where(remapper == l)[0][0] - 1
 
-pth_save = ply_file[:-4] + '_pred_gt.ply'
+pth_save = ply_file[:-4] + '_pred_legend_' + str(num_classes) + '.ply'
 visualize(labels, ply_file, pth_save)
 
 

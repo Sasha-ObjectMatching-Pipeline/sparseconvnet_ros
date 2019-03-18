@@ -44,7 +44,7 @@ data_modular.batch_size = 1
 data_loader = data_modular.load_val_data(pth_dir + 'val_20classes/')
 
 use_cuda = torch.cuda.is_available()
-exp_name='unet_scale20_m16_rep1_notResidualBlocks_20classes/unet_scale20_m16_rep1_NoResidualBlocks_20classes'
+exp_name='unet_scale20_m16_rep1_noResidualBlocks_20classes/unet_scale20_m16_rep1_noResidualBlocks_20classes'
 num_classes = 20
 
 unet=Model()
@@ -70,7 +70,7 @@ labels = store.max(1)[1].numpy()
 
 pth_files = sorted(glob.glob(pth_dir + 'val_20classes/' + '*.pth'))
 ply_path = '/usr/mount/v4rtemp/datasets/ScanNet/ScanNetV2/scans/'
-pth_save = pth_dir + 'unet_scale20_m16_rep1_notResidualBlocks_20classes/val_results/legend_labels/'
+pth_save = pth_dir + 'unet_scale20_m16_rep1_noResidualBlocks_20classes/val_results/legend_labels/'
 #pth_save = pth_dir + 'val/legend_color/'
 for batch in data_loader:
     print(batch['id'])
@@ -84,7 +84,7 @@ for batch in data_loader:
         end_idx = data_modular.valOffsets[s_id+1]
         scene_labels = labels[start_idx:end_idx]
 
-        if (num_classes == 20):
+        if num_classes == 20:
             for i,l in enumerate(scene_labels):
                 scene_labels[i] = np.where(remapper==l)[0][0] - 1
 

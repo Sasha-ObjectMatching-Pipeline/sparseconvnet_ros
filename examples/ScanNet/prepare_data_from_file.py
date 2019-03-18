@@ -14,7 +14,7 @@ txt_files = ['scannetv2_train.txt','scannetv2_val.txt']
 
 # Map relevant classes to {0,1,...,19}, and ignored classes to -100
 remapper=np.ones(150)*(-100)
-for i,x in enumerate([1,2,3,4,5,6,7,8,9,10,11,12,14,16,24,28,33,34,36,39]):
+for i,x in enumerate([1,2,3,4,5,6,7,8,9,10,11,12,14,16,24,28,33,34,36,39,40]):
     remapper[x]=i
 #for i,x in enumerate(np.array(range(1,41))):   #use that for 40 classes
 #    remapper[x]=i
@@ -28,7 +28,7 @@ def func(fn, ft):
     colors=np.ascontiguousarray(v[:,3:6])/127.5-1
     a=plyfile.PlyData().read(fn2)
     w = remapper[np.array(a.elements[0]['label'])]
-    save_path = txt_dir + ft + '_20classes/' + fn +'.pth'
+    save_path = txt_dir + ft + '_21classes/' + fn +'.pth'
     #save_path = txt_dir + ft + '_40classes/' + fn + '.pth'
     torch.save((coords,colors,w),save_path)    #saves for each vertex the coordinates, color and label
     print(fn1, fn2)
