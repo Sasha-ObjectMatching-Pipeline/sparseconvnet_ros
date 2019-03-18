@@ -1,3 +1,5 @@
+This repository contains several use cases for Sparse Convolutional Networks. I only tried examples/ScnaNet.
+
 # Submanifold Sparse Convolutional Networks
 
 This is the PyTorch library for training Submanifold Sparse Convolutional Networks.
