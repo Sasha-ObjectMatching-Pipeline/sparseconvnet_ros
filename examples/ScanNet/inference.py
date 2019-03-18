@@ -15,9 +15,17 @@ import numpy as np
 pth_dir = '/usr/mount/v4rtemp/el/SparseConvNet/'
 #pth_dir=''
 
+num_classes = 20
+
 remapper=np.ones(150)*(-100)
-for i,x in enumerate([1,2,3,4,5,6,7,8,9,10,11,12,14,16,24,28,33,34,36,39]):
-    remapper[x]=i
+if num_classes is 20:
+    # VALID_CLAS_IDS have been mapped to the range {0,1,...,19}
+    for i,x in enumerate([1,2,3,4,5,6,7,8,9,10,11,12,14,16,24,28,33,34,36,39]):
+        remapper[x]=i
+if num_classes is 21:
+    # VALID_CLAS_IDS have been mapped to the range {0,1,...,19}
+    for i,x in enumerate([1,2,3,4,5,6,7,8,9,10,11,12,14,16,24,28,33,34,36,39,40]):
+        remapper[x]=i
 
 def visualize(ids, mesh_file, output_file):
     if not output_file.endswith('.ply'):
@@ -45,7 +53,7 @@ data_loader = data_modular.load_val_data(pth_dir + 'val_20classes/')
 
 use_cuda = torch.cuda.is_available()
 exp_name='unet_scale20_m16_rep1_noResidualBlocks_20classes/unet_scale20_m16_rep1_noResidualBlocks_20classes'
-num_classes = 20
+
 
 unet=Model()
 if use_cuda:
@@ -84,9 +92,9 @@ for batch in data_loader:
         end_idx = data_modular.valOffsets[s_id+1]
         scene_labels = labels[start_idx:end_idx]
 
-        if num_classes == 20:
-            for i,l in enumerate(scene_labels):
-                scene_labels[i] = np.where(remapper==l)[0][0] - 1
+        if num_classes != 40:
+            for i, l in enumerate(labels):
+                labels[i] = np.where(remapper == l)[0][0] - 1
 
         if not os.path.isfile(pth_save + ply_file[:-4]+'_pred.ply'):
             print(pth_save + ply_file[:-4]+'_pred.ply')
