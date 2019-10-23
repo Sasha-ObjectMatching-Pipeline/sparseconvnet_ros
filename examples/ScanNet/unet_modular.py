@@ -8,9 +8,9 @@
 # triggered manually. Otherwise those data get loaded automatically whenever you want to model t
 
 # Options
-m = 16 # 16 or 32
-residual_blocks=False #True or False
-block_reps = 1 #Conv block repetition factor: 1 or 2
+m = 32 # 16 or 32
+residual_blocks=True #True or False
+block_reps = 2 #Conv block repetition factor: 1 or 2
 
 import torch, data_modular, iou
 import torch.nn as nn
@@ -19,16 +19,8 @@ import torch.nn.functional as F
 import sparseconvnet as scn
 import time
 
-use_cuda = torch.cuda.is_available()
-dir = '/usr/mount/v4rtemp/el/SparseConvNet/'
-#dir=''
-#exp_name='unet_scale50_m32_rep2_ResidualBlocks'
-num_classes = 40
-exp_name='unet_scale20_m16_rep1_NoResidualBlocks_' + str(num_classes) +'classes_test'
-
-
 class Model(nn.Module):
-    def __init__(self):
+    def __init__(self, num_classes, m=m, residual_blocks=residual_blocks, block_reps=block_reps):
         nn.Module.__init__(self)
         self.sparseModel = scn.Sequential().add(
            scn.InputLayer(data_modular.dimension,data_modular.full_scale, mode=4)).add(
@@ -44,7 +36,13 @@ class Model(nn.Module):
 
 
 if __name__ == "__main__":
-    unet=Model()
+    use_cuda = torch.cuda.is_available()
+    dir = '/usr/mount/v4rtemp/el/SparseConvNet/'    #where the trained models get stored
+    num_classes = 21
+    exp_name = 'unet_scale40_m32_rep2_ResBlocksTrue_classes' + str(num_classes)
+    restore_epoch = 256 #this is optional
+
+    unet=Model(num_classes)
     if use_cuda:
         unet=unet.cuda()
 
@@ -52,7 +50,7 @@ if __name__ == "__main__":
     val_data_loader = data_modular.load_val_data(dir + 'val_' + str(num_classes) + 'classes/')
 
     training_epochs=512
-    training_epoch=scn.checkpoint_restore(unet,dir+exp_name,'unet',use_cuda)
+    training_epoch=scn.checkpoint_restore(unet,dir+exp_name,'unet',use_cuda, restore_epoch)
     optimizer = optim.Adam(unet.parameters())
     print('#classifer parameters', sum([x.nelement() for x in unet.parameters()]))
 

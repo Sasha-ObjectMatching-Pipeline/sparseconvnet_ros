@@ -3,11 +3,12 @@ import sparseconvnet as scn
 from unet_modular import Model
 import sys
 import NYU40_colors
-from plyfile import PlyData
+from plyfile import PlyData, PlyElement
 import math
 import numpy as np
+from scipy.special import entr
 
-num_classes = 40
+num_classes = 21
 
 # VALID_CLAS_IDS have been mapped to the range {0,1,...,19}
 remapper=np.ones(150)*(-100)
@@ -29,10 +30,12 @@ def visualize(ids, mesh_file, output_file):
     num_colors = len(colors)
     with open(mesh_file, 'rb') as f:
         plydata = PlyData.read(f)
+        vert = plydata['vertex'] #same as plydata.elements[0]
+        faces = plydata.elements[1]
         num_verts = plydata['vertex'].count
         if num_verts != len(ids):
            sys.stderr.write('ERROR: ' + '#predicted labels = ' + str(len(ids)) + 'vs #mesh vertices = ' + str(num_verts))
-        # *_vh_clean_2.ply has colors already
+        # *_vh_clean_2.ply has colors already, save label id instead of alpha value
         for i in range(num_verts):
             if ids[i]+1 >= num_colors:
                sys.stderr.write('ERROR: ' + 'found predicted label ' + str(ids[i]) + ' not in nyu40 label set')
@@ -40,16 +43,41 @@ def visualize(ids, mesh_file, output_file):
             plydata['vertex']['red'][i] = color[0]
             plydata['vertex']['green'][i] = color[1]
             plydata['vertex']['blue'][i] = color[2]
-    plydata.write(output_file)
+        #add the label field to the ply file
+        (x, y, z, r, g, b, alpha) = (vert[t] for t in ('x', 'y', 'z', 'red', 'green', 'blue', 'alpha'))
+        new_data = np.column_stack((x,y,z,r,g,b,ids))
+        points_tuple = list([tuple(row) for row in new_data])
+        new_points = np.core.records.fromrecords(points_tuple,
+                                                 names='x,y,z,red,green,blue,label',
+                                                 formats='f4,f4,f4,u1,u1,u1,u1')
+        el = PlyElement.describe(new_points, 'vertex')
+    PlyData([el, faces], text=False).write(output_file)
+
+def saveConfToFile(store, coords):
+    store = store.numpy()
+
+    file = open("coordsConf.txt", "w")
+    for p in range(len(coords)):
+        file.write(str(coords[p][0]) + " " + str(coords[p][1]) + " " + str(coords[p][2]))
+        softmax = np.exp(store[p]) / np.sum(np.exp(store[p]))
+        for i in range(len(store[p])):
+            label_id = np.where(remapper == i)[0][0]
+            file.write(" " + str(label_id) + " " + str(softmax[i]))
+        entropy = entr(softmax).sum(axis=0)
+        #file.write(" entropy " + str(entropy))
+        file.write("\n")
+    file.close()
 
 
 
 #ply_file ='/home/edith/Software/SparseConvNet/examples/ScanNet/test/GH25_office_ElasticFusion_rotated.ply'
-ply_file='/home/edith/Downloads/ETH_change_detection_ds/icra_2017_change_detection/living_room/complete_mesh/observation_0_aligned.ply'
-exp_name='unet_scale20_m16_rep1_noResidualBlocks_' + str(num_classes) +'classes/unet_scale20_m16_rep1_noResidualBlocks'
-scale = 20
+#ply_file='/home/edith/Software/Reconstructions/voxblox_ws/src/voxblox/voxblox_ros/mesh_results/KennyLab_test.ply'
+ply_file = '/media/edith/Sasha1/Edith_Datasets/ChangeDetectionDatasetEdith/Arena/InputScenes/scene2.ply'
+dir = '/usr/mount/v4rtemp/el/SparseConvNet/'
+exp_name='unet_scale50_m32_rep2_ResBlocksTrue_classes' + str(num_classes) + '/unet_scale50_m32_rep2_ResBlocksTrue_classes' + str(num_classes)
+scale = 50
 full_scale=4096
-val_reps=1
+val_reps=2
 
 a= PlyData().read(ply_file)
 v=np.array([list(x) for x in a.elements[0]])    #elements[0] stores all vertices with [x,y,z,r,g,b,alpha]
@@ -90,11 +118,12 @@ point_ids = torch.from_numpy(np.nonzero(idxs)[0])   #long
 batch = {'x': [locs,feats], 'y': labels.long(), 'id': 0, 'point_ids': point_ids} #this is a dictionary
 
 use_cuda = torch.cuda.is_available()
-unet=Model()
+unet=Model(num_classes)
+
 if use_cuda:
     unet=unet.cuda()
 
-training_epoch=scn.checkpoint_restore(unet,exp_name,'unet',use_cuda)
+training_epoch=scn.checkpoint_restore(unet, dir + exp_name,'unet',use_cuda)
 if training_epoch is 1:
     print("Training epoch is 1. The model probably couldn't be loaded.")
 print('#classifer parameters', sum([x.nelement() for x in unet.parameters()]))
@@ -116,6 +145,7 @@ if num_classes != 40:
         labels[i] = np.where(remapper == l)[0][0] - 1
 
 pth_save = ply_file[:-4] + '_pred_legend_' + str(num_classes) + '.ply'
+saveConfToFile(store, coords)
 visualize(labels, ply_file, pth_save)
 
 

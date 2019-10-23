@@ -5,10 +5,10 @@
 # LICENSE file in the root directory of this source tree.
 
 # Options
-scale=20 #50  #Voxel size = 1/scale
+scale=50 #50  #Voxel size = 1/scale
 val_reps=1 #3 # Number of test views, 1 or more
-batch_size=8 #5
-load_num_workers = 20
+batch_size=5 #5
+load_num_workers = 1
 
 import torch, numpy as np, glob, math, torch.utils.data, scipy.ndimage, multiprocessing as mp
 
