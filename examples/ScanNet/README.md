@@ -1,5 +1,3 @@
-I added are pre-trained models for 20,21, and 40 classes using the training data from ScanNet. 
-
 *inference_from_single_ply.py* applies the model to a single ply file saved on disk. You have to specify the ply-file path (ply_file) and the path to the model (exp_name). This method saves a labeled ply-file in the same folder as the input file.
 
 *inference.py* reads all pth-files stored in a provided folder (data_loader) and saves for each scene a labeled ply-file.
