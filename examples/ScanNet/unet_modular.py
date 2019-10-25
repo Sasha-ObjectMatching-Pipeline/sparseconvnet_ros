@@ -12,12 +12,16 @@ m = 32 # 16 or 32
 residual_blocks=True #True or False
 block_reps = 2 #Conv block repetition factor: 1 or 2
 
-import torch, data_modular, iou
+
 import torch.nn as nn
 import torch.optim as optim
 import torch.nn.functional as F
 import sparseconvnet as scn
 import time
+from . import iou
+from . import data_modular
+
+
 
 class Model(nn.Module):
     def __init__(self, num_classes, m=m, residual_blocks=residual_blocks, block_reps=block_reps):

@@ -1,6 +1,6 @@
 import torch
 import sparseconvnet as scn
-from unet_modular import Model
+from ScanNet.unet_modular import Model
 import sys
 import NYU40_colors
 from plyfile import PlyData, PlyElement
@@ -93,15 +93,12 @@ a = coords
 b = colors
 c = fake_labels
 m=np.eye(3)
-m[0][0]*=np.random.randint(0,2)*2-1
-m*=scale
-theta=np.random.rand()*2*math.pi
-m=np.matmul(m,[[math.cos(theta),math.sin(theta),0],[-math.sin(theta),math.cos(theta),0],[0,0,1]])
-a=np.matmul(a,m)+full_scale/2+np.random.uniform(-2,2,3)
-m=a.min(0)
-M=a.max(0)
-q=M-m
-offset=-m+np.clip(full_scale-M+m-0.001,0,None)*np.random.rand(3)+np.clip(full_scale-M+m+0.001,None,0)*np.random.rand(3)
+m *= scale
+a = np.matmul(a, m) + full_scale / 2
+m = a.min(0)
+M = a.max(0)
+q = M - m
+offset = -m + np.clip(full_scale - M + m - 0.001, 0, None) + np.clip(full_scale - M + m + 0.001, None, 0)
 a+=offset
 idxs=(a.min(1)>=0)*(a.max(1)<full_scale)    #only those points which have coords >= 0 and < full_scale are kept
 a=a[idxs]

@@ -1,6 +1,6 @@
 import torch
 import sparseconvnet as scn
-from unet_modular import Model
+from ScanNet.unet_modular import Model
 import sys
 import NYU40_colors
 from plyfile import PlyData
