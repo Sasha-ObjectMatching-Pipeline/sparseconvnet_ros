@@ -2,7 +2,7 @@ import torch
 import sparseconvnet as scn
 from ScanNet.unet_modular import Model
 import sys
-import NYU40_colors
+from ScanNet import NYU40_colors
 from plyfile import PlyData, PlyElement
 import math
 import numpy as np
@@ -77,7 +77,6 @@ dir = '/usr/mount/v4rtemp/el/SparseConvNet/'
 exp_name='unet_scale50_m32_rep2_ResBlocksTrue_classes' + str(num_classes) + '/unet_scale50_m32_rep2_ResBlocksTrue_classes' + str(num_classes)
 scale = 50
 full_scale=4096
-val_reps=2
 
 a= PlyData().read(ply_file)
 v=np.array([list(x) for x in a.elements[0]])    #elements[0] stores all vertices with [x,y,z,r,g,b,alpha]
@@ -120,7 +119,7 @@ unet=Model(num_classes)
 if use_cuda:
     unet=unet.cuda()
 
-training_epoch=scn.checkpoint_restore(unet, dir + exp_name,'unet',use_cuda)
+training_epoch=scn.checkpoint_restore(unet, dir + exp_name,'unet',use_cuda, 512)
 if training_epoch is 1:
     print("Training epoch is 1. The model probably couldn't be loaded.")
 print('#classifer parameters', sum([x.nelement() for x in unet.parameters()]))
@@ -130,11 +129,11 @@ with torch.no_grad():
     scn.forward_pass_multiplyAdd_count = 0
     scn.forward_pass_hidden_states = 0
     store=torch.zeros(len(labels), num_classes)
-    for rep in range(1, 1 + val_reps):
-        if use_cuda:
-            batch['x'][1] = batch['x'][1].cuda()
-        predictions = unet(batch['x'])
-        store.index_add_(0, batch['point_ids'], predictions.cpu())
+    if use_cuda:
+        batch['x'][1] = batch['x'][1].cuda()
+    print(len(batch['x'][1]))
+    predictions = unet(batch['x'])
+    store.index_add_(0, batch['point_ids'], predictions.cpu())
 
 labels = store.max(1)[1].numpy()
 if num_classes != 40:

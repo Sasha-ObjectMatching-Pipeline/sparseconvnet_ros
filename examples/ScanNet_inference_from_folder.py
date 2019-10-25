@@ -2,9 +2,8 @@ import torch
 import sparseconvnet as scn
 from ScanNet.unet_modular import Model
 import sys
-import NYU40_colors
+from ScanNet import NYU40_colors
 from plyfile import PlyData, PlyElement
-import math
 import numpy as np
 from scipy.special import entr
 import glob
@@ -95,7 +94,6 @@ dir = '/usr/mount/v4rtemp/el/SparseConvNet/'
 exp_name='unet_scale50_m32_rep2_ResBlocksTrue_classes' + str(num_classes) + '/unet_scale50_m32_rep2_ResBlocksTrue_classes' + str(num_classes)
 scale = 50
 full_scale=4096
-val_reps=2
 ep=512
 
 use_cuda = torch.cuda.is_available()
@@ -164,11 +162,10 @@ for file in scenes:
         scn.forward_pass_multiplyAdd_count = 0
         scn.forward_pass_hidden_states = 0
         store=torch.zeros(len(labels), num_classes)
-        for rep in range(1, 1 + val_reps):
-            if use_cuda:
-                batch['x'][1] = batch['x'][1].cuda()
-            predictions = unet(batch['x'])
-            store.index_add_(0, batch['point_ids'], predictions.cpu())
+        if use_cuda:
+           batch['x'][1] = batch['x'][1].cuda()
+        predictions = unet(batch['x'])
+        store.index_add_(0, batch['point_ids'], predictions.cpu())
 
     labels = store.max(1)[1].numpy()
     if num_classes != 40:
