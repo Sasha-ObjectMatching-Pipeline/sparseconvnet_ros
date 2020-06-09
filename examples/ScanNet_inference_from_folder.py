@@ -12,7 +12,7 @@ from numpy.lib.recfunctions import merge_arrays
 
 num_classes = 21
 
-# VALID_CLAS_IDS have been mapped to the range {0,1,...,19}
+# VALID_CLASS_IDS have been mapped to the range {0,1,...,19}
 remapper=np.ones(150)*(-100)
 print("Semantic segmentation with {0} classes".format(num_classes))
 if num_classes is 20:
@@ -54,8 +54,7 @@ def visualize(ids, mesh_file, output_file):
             # Recreate the PlyElement instance
             v = PlyElement.describe(a, 'vertex')
             # Recreate the PlyData instance
-            #plydata = PlyData([v, faces], text=True)
-            plydata = PlyData(v, text=True)
+            plydata = PlyData([v], text=True)
             vert = plydata['vertex']  # same as plydata.elements[0]
 
         (x, y, z, r, g, b, alpha) = (vert[t] for t in ('x', 'y', 'z', 'red', 'green', 'blue', 'alpha'))
@@ -84,10 +83,10 @@ def saveConfToFile(store, coords):
 
 #ply_folder= '/mnt/fe59de27-965c-4dbe-aae9-e6ee6173bb7c/Datasets/ChangeDetectionDatasetEdith/20190729_Full_dataset/InputScenes/'
 #ply_folder='/mnt/fe59de27-965c-4dbe-aae9-e6ee6173bb7c/Datasets/icra_2017_change_detection_ETH/living_room/complete_mesh/transformed/'
-#ply_folder ='/media/edith/Sasha1/Edith_Datasets/ChangeDetectionDatasetEdith/GH30_living/InputScenes_part/'
 ply_folder='/media/edith/Sasha1/Edith_Datasets/ChangeDetectionDatasetEdith/GH30_office/ScalableFusion/InputScenes/'
-result_folder = ply_folder + "3D_SemSeg_Results/"
-os.makedirs(result_folder, exist_ok=True)
+result_folder = ply_folder + "/3D_SemSeg_Results/"
+if not os.path.exists(result_folder):
+	os.makedirs(result_folder)
 scenes = glob.glob(ply_folder + "/*.ply")
 
 dir = '/usr/mount/v4rtemp/el/SparseConvNet/'
@@ -173,5 +172,5 @@ for file in scenes:
             labels[i] = np.where(remapper == l)[0][0] - 1
 
     pth_save = result_folder + os.path.basename(file)[:-4] + '_pred_legend_' + str(num_classes) + '.ply'
-    saveConfToFile(store, coords)
+    #saveConfToFile(store, coords)
     visualize(labels, file, pth_save)
