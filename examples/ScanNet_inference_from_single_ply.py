@@ -31,7 +31,6 @@ def visualize(ids, mesh_file, output_file):
     with open(mesh_file, 'rb') as f:
         plydata = PlyData.read(f)
         vert = plydata['vertex'] #same as plydata.elements[0]
-        faces = plydata.elements[1]
         num_verts = plydata['vertex'].count
         if num_verts != len(ids):
            sys.stderr.write('ERROR: ' + '#predicted labels = ' + str(len(ids)) + 'vs #mesh vertices = ' + str(num_verts))
@@ -51,7 +50,12 @@ def visualize(ids, mesh_file, output_file):
                                                  names='x,y,z,red,green,blue,label',
                                                  formats='f4,f4,f4,u1,u1,u1,u1')
         el = PlyElement.describe(new_points, 'vertex')
-    PlyData([el, faces], text=False).write(output_file)
+    props = [p.name for p in plydata.elements]
+    if 'face' in props:
+        faces = plydata['face']
+        PlyData([el, faces], text=False).write(output_file)
+    else:
+        PlyData([el], text=False).write(output_file)
 
 def saveConfToFile(store, coords):
     store = store.numpy()
@@ -141,7 +145,7 @@ if num_classes != 40:
         labels[i] = np.where(remapper == l)[0][0] - 1
 
 pth_save = ply_file[:-4] + '_pred_legend_' + str(num_classes) + '.ply'
-saveConfToFile(store, coords)
+#saveConfToFile(store, coords)
 visualize(labels, ply_file, pth_save)
 
 
