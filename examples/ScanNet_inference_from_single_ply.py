@@ -7,6 +7,7 @@ from plyfile import PlyData, PlyElement
 import math
 import numpy as np
 from scipy.special import entr
+from numpy.lib.recfunctions import merge_arrays
 
 num_classes = 21
 
@@ -43,6 +44,17 @@ def visualize(ids, mesh_file, output_file):
             plydata['vertex']['green'][i] = color[1]
             plydata['vertex']['blue'][i] = color[2]
         #add the label field to the ply file
+        #check if element alpha exists
+        props = [p.name for p in vert.properties]
+        if 'alpha' not in props:
+            # Create the new vertex data with appropriate dtype
+            a = merge_arrays([vert.data, np.zeros(len(vert.data), [('alpha', 'u1')])], flatten=True)
+            # Recreate the PlyElement instance
+            v = PlyElement.describe(a, 'vertex')
+            # Recreate the PlyData instance
+            plydata = PlyData([v], text=True)
+            vert = plydata['vertex']  # same as plydata.elements[0]
+
         (x, y, z, r, g, b, alpha) = (vert[t] for t in ('x', 'y', 'z', 'red', 'green', 'blue', 'alpha'))
         new_data = np.column_stack((x,y,z,r,g,b,ids))
         points_tuple = list([tuple(row) for row in new_data])
@@ -73,11 +85,10 @@ def saveConfToFile(store, coords):
     file.close()
 
 
+ply_file='/home/edith/test_data_MarkusLeitner/SashaRoom/test_run2/voxblox.ply'
+#ply_file = '/media/edith/Sasha1/Edith_Datasets/ChangeDetectionDatasetEdith/GH30_kitchen_cleaned/scene1.ply'
 
-#ply_file ='/home/edith/Software/SparseConvNet/examples/ScanNet/test/GH25_office_ElasticFusion_rotated.ply'
-#ply_file='/home/edith/Software/Reconstructions/voxblox_ws/src/voxblox/voxblox_ros/mesh_results/KennyLab_test.ply'
-ply_file = '/media/edith/Sasha1/Edith_Datasets/ChangeDetectionDatasetEdith/Arena/InputScenes/scene2.ply'
-dir = '/usr/mount/v4rtemp/el/SparseConvNet/'
+dir = 'ScanNet/'
 exp_name='unet_scale50_m32_rep2_ResBlocksTrue_classes' + str(num_classes) + '/unet_scale50_m32_rep2_ResBlocksTrue_classes' + str(num_classes)
 scale = 50
 full_scale=4096
