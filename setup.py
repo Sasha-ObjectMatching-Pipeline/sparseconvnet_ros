@@ -16,7 +16,7 @@ extra = {'cxx': ['-std=c++14', '-fopenmp'], 'nvcc': ['-std=c++14', '-Xcompiler',
 
 setup(
     name='sparseconvnet',
-    version='0.2',
+    version='0.0.0',
     description='Submanifold (Spatially) Sparse Convolutional Networks https://arxiv.org/abs/1706.01307',
     author='Facebook AI Research',
     author_email='benjamingraham@fb.com',
@@ -34,5 +34,5 @@ setup(
         include_dirs=[conda_include_dir, this_dir+'/sparseconvnet/SCN/'],
         extra_compile_args=extra['cxx'])],
     cmdclass={'build_ext': BuildExtension},
-    zip_safe=False,
+    #zip_safe=False,
 )
