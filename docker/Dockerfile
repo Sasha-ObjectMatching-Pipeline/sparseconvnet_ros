@@ -1,4 +1,4 @@
-FROM nvi./n8-devel
+FROM nvidia/cuda:11.2.2-cudnn8-devel
 MAINTAINER Christian Eder (christian.eder@tuwien.ac.at)
 
 ENV DEBIAN_FRONTEND noninteractive
@@ -111,6 +111,14 @@ RUN echo "source ~/catkin_build_ws/devel/setup.bash" >> ~/.bashrc
 
 ENV NVIDIA_VISIBLE_DEVICES all
 ENV NVIDIA_DRIVER_CAPABILITIES compute,utility
+
+RUN git clone --branch robot_experiments https://username:password@rgit.acin.tuwien.ac.at/edith-langer/sparseconvnet.git ~/catkin_build_ws/src/sparseconvnet_ros
+RUN cd ~/catkin_build_ws/ && catkin build
+RUN source ~/catkin_build_ws/devel/setup.bash
+#RUN cd ~/catkin_build_ws/src/sparseconvnet_ros && bash develop.sh
+#RUN cd ~/catkin_build_ws/src/sparseconvnet_ros && rm -rf build/ dist/ sparseconvnet.egg-info sparseconvnet_SCN*.so
+#RUN cd ~/catkin_build_ws/src/sparseconvnet_ros && python3 setup.py develop
+#RUN cd ~/catkin_build_ws/src/sparseconvnet_ros && python3 examples/hello-world.py
 
 WORKDIR /root
 
