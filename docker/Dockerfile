@@ -123,7 +123,7 @@ RUN source ~/catkin_build_ws/devel/setup.bash
 WORKDIR /root
 
 # setup entrypoint
-COPY ./ros_entrypoint.sh /
-RUN chmod +x /ros_entrypoint.sh
-ENTRYPOINT ["/ros_entrypoint.sh"]
+#COPY ./ros_entrypoint.sh /
+#RUN chmod +x /ros_entrypoint.sh
+#ENTRYPOINT ["/ros_entrypoint.sh"]
 CMD ["bash"]

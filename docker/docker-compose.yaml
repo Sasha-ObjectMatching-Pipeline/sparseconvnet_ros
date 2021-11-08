@@ -1,0 +1,13 @@
+version: "3.3"
+services:
+  sparseconvnet:
+    image: "sparseconvnet:latest"
+    network_mode: "host"
+    volumes:
+      - ~/v4r/edith/share:/root/share
+      - /usr/lib/nvidia/:/usr/lib/nvidia/
+    environment:
+      ROS_MASTER_URI: "http://localhost:11311"
+    command: bash -c "source ~/catkin_build_ws/devel/setup.bash; cd ~/catkin_build_ws/src/sparseconvnet_ros/; bash develop.sh; cd ~/catkin_build_ws/src/sparseconvnet_ros/examples; ROS_NAMESPACE=sparseconvnet_ros python3 ScanNet_inference_from_single_ply_service.py"
+    stdin_open: true
+    tty: true
