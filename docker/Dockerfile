@@ -112,7 +112,7 @@ RUN echo "source ~/catkin_build_ws/devel/setup.bash" >> ~/.bashrc
 ENV NVIDIA_VISIBLE_DEVICES all
 ENV NVIDIA_DRIVER_CAPABILITIES compute,utility
 
-RUN git clone --branch robot_experiments https://username:password@rgit.acin.tuwien.ac.at/edith-langer/sparseconvnet.git ~/catkin_build_ws/src/sparseconvnet_ros
+RUN git clone --branch robot_experiments https://github.com/Sasha-ObjectMatching-Pipeline/sparseconvnet_ros.git ~/catkin_build_ws/src/sparseconvnet_ros
 RUN cd ~/catkin_build_ws/ && catkin build
 RUN source ~/catkin_build_ws/devel/setup.bash
 #RUN cd ~/catkin_build_ws/src/sparseconvnet_ros && bash develop.sh
